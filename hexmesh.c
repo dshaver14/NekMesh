@@ -35,7 +35,7 @@ int main(int argc, char *argv[]){
 
   int i,j,k,n;
 
-  double pio6=M_PI/6., pio3=2.*pio6;
+  static double pio6=M_PI/6., pio3=M_PI/3.;
   int a=2,b=3,c=3,d=3,e=3,f=2,g=3;
 
   for(i=1;i<argc;i++){
@@ -51,17 +51,17 @@ int main(int argc, char *argv[]){
 //read the points from the input file
 //read_inp(inname);
   
-  int N_pin_rings = 3;
+  int N_pin_rings = 7;
   double pitch = 1.10;
-  double delta=0.1*(pitch-1.);
-  double apoth = pitch*((double)N_pin_rings - 0.5)*sin(pio6);
-  double gamma = apoth-0.5*pitch*sin(pio6);
-  double gap = gamma - 0.5;
-  if(gap<2.0*delta) {
-    printf("Error: gap between pin and wall too small. %f\n",gap);
-    return 0;
-  }
-  points=malloc(32*sizeof(point));
+  double delta=0.025*(pitch-1.);
+//double apoth =       ((double)N_pin_rings - 0.5)*pitch*cos(pio6);
+//double gamma = apoth-((double)N_pin_rings - 1.0)*pitch*cos(pio6);
+//double gap = gamma - 0.5;
+//if(gap<2.0*delta) {
+//  printf("Error: gap between pin and wall too small. %f\n",gap);
+//  return 0;
+//}
+  points=malloc(16*sizeof(point));
 
 //Layout the canonical type 1 subchannel (center)
   int npts1=16;
@@ -122,96 +122,58 @@ int main(int argc, char *argv[]){
   type3[10]=line_circle_intercept(type3[1],type3[3],type3[3],0.5);
   type3[9]=midpoint(type3[8],type3[10]);
   type3[12]=midpoint(type3[5],type3[9]);
-  
+ 
+//make the mesh 
+  for(int ipring=1;ipring<=N_pin_rings;ipring++){
+    //regular channels and corner channels
+    translate.x=((double)ipring-0.5)*pitch; translate.y=0.5*pitch*tan(pio6);
+    for(int ichan=0;ichan<ipring;ichan++){
+      if(ipring<N_pin_rings){
+        for(int ipt=0;ipt<npts1;ipt++) points[ipt]=translate_point(type1[ipt],translate);
 
-//int iring=1;
-//int nchans=6;
+        for(int iang=0;iang<6;iang++){
+          for(int ipt=0;ipt<npts1;ipt++) points[ipt]=rotate_point(points[ipt],pio3,origin);
+          make_type1_subchannel(2,3,delta,0);
+        }
+      }else{
+        for(int ipt=0;ipt<npts3;ipt++) points[ipt]=translate_point(type3[ipt],translate);
 
-//ring 1
-  translate.x=-type1[3].x;translate.y=-type1[3].y;
-  for(int ipt=0;ipt<npts1;ipt++) points[ipt]=translate_point(type1[ipt],translate);
+        for(int iang=0;iang<6;iang++){
+          for(int ipt=0;ipt<npts3;ipt++) points[ipt]=rotate_point(points[ipt],pio3,origin);
+          make_type3_subchannel(2,3,delta,0);
+        }
+      }
+      translate.x-=0.5*pitch;
+      translate.y+=pitch*sin(pio3);
+    }
+    //flipped channels and edge channels
+    translate.x=((double)ipring-1.0)*pitch; translate.y=pitch*tan(pio6);
+    for(int ichan=0;ichan<(ipring-1);ichan++){
+      if(ipring<N_pin_rings){
+        for(int ipt=0;ipt<npts1;ipt++) points[ipt]=rotate_point(type1[ipt],M_PI,origin);
+        for(int ipt=0;ipt<npts1;ipt++) points[ipt]=translate_point(points[ipt],translate);
 
-  for(int iang=0;iang<6;iang++){
-    for(int ipt=0;ipt<npts1;ipt++) points[ipt]=rotate_point(points[ipt],pio3,origin);
-    make_type1_subchannel(2,3,delta,0);
-  }
+        for(int iang=0;iang<6;iang++){
+          for(int ipt=0;ipt<npts1;ipt++) points[ipt]=rotate_point(points[ipt],pio3,origin);
+          make_type1_subchannel(2,3,delta,0);
+        }
+      }else{
+        for(int ipt=0;ipt<npts2;ipt++) points[ipt]=translate_point(type2[ipt],translate);
 
-//ring 2
-  int iring=2;
-  
-  translate.x+=pitch;
-  for(int ipt=0;ipt<npts1;ipt++) points[ipt]=translate_point(type1[ipt],translate);
-
-  for(int iang=0;iang<6;iang++){
-    for(int ipt=0;ipt<npts1;ipt++) points[ipt]=rotate_point(points[ipt],pio3,origin);
-    make_type1_subchannel(2,3,delta,0);
-  }
-
-  translate.x-=0.5*pitch;
-  translate.y+=pitch*sin(pio3);
-  for(int ipt=0;ipt<npts1;ipt++) points[ipt]=translate_point(type1[ipt],translate);
-
-  for(int iang=0;iang<6;iang++){
-    for(int ipt=0;ipt<npts1;ipt++) points[ipt]=rotate_point(points[ipt],pio3,origin);
-    make_type1_subchannel(2,3,delta,0);
-  }
-
-  translate.y-=pitch/(2.*cos(pio6));
-  for(int ipt=0;ipt<npts1;ipt++) points[ipt]=rotate_point(type1[ipt],M_PI,origin);
-  for(int ipt=0;ipt<npts1;ipt++) points[ipt]=translate_point(points[ipt],translate);
-
-  for(int iang=0;iang<6;iang++){
-    for(int ipt=0;ipt<npts1;ipt++) points[ipt]=rotate_point(points[ipt],pio3,origin);
-    make_type1_subchannel(2,3,delta,0);
-  }
-
-//ring 3
-
-  //edge channels
-  translate.x=2.*pitch;translate.y=pitch/(2.*cos(pio6));
-  for(int ipt=0;ipt<npts2;ipt++) points[ipt]=translate_point(type2[ipt],translate);
-
-  for(int iang=0;iang<6;iang++){
-    for(int ipt=0;ipt<npts2;ipt++) points[ipt]=rotate_point(points[ipt],pio3,origin);
-    make_type2_subchannel(2,3,delta,0);
-  }
-
-  translate.x-=0.5*pitch;
-  translate.y+=pitch*sin(pio3);
-  for(int ipt=0;ipt<npts2;ipt++) points[ipt]=translate_point(type2[ipt],translate);
-
-  for(int iang=0;iang<6;iang++){
-    for(int ipt=0;ipt<npts2;ipt++) points[ipt]=rotate_point(points[ipt],pio3,origin);
-    make_type2_subchannel(2,3,delta,0);
-  }
-
-  //corner channel
-  translate.x=pitch*((double)N_pin_rings-0.5);translate.y=0.5*pitch*tan(pio6);
-  for(int ipt=0;ipt<npts1;ipt++) points[ipt]=translate_point(type3[ipt],translate);
-
-  for(int iang=0;iang<6;iang++){
-    for(int ipt=0;ipt<npts2;ipt++) points[ipt]=rotate_point(points[ipt],pio3,origin);
-    make_type3_subchannel(2,3,delta,0);
-  }
-
-  for(int i=0;i<2;i++){
-    translate.x-=0.5*pitch;
-    translate.y+=pitch*sin(pio3);
-    for(int ipt=0;ipt<npts1;ipt++) points[ipt]=translate_point(type3[ipt],translate);
-    for(int iang=0;iang<6;iang++){
-      for(int ipt=0;ipt<npts2;ipt++) points[ipt]=rotate_point(points[ipt],pio3,origin);
-      make_type3_subchannel(2,3,delta,0);
+        for(int iang=0;iang<6;iang++){
+          for(int ipt=0;ipt<npts2;ipt++) points[ipt]=rotate_point(points[ipt],pio3,origin);
+          make_type2_subchannel(2,3,delta,0);
+        }
+      }
+      translate.x-=0.5*pitch;
+      translate.y+=pitch*sin(pio3);
     }
   }
-
-
 
 //sprintf(reaname,"type3.dat");
 //output_pts(points,npts3,reaname);
 
-
-
-//write_rea(reaname);
+  write_rea(reaname);
     
 //  sprintf(reaname,"pts.dat");
 //  output_pts(points,npts,reaname);
