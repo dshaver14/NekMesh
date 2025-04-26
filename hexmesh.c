@@ -36,7 +36,6 @@ int main(int argc, char *argv[]){
   int i,j,k,n;
 
   static double pio6=M_PI/6., pio3=M_PI/3.;
-  int a=2,b=3,c=3,d=3,e=3,f=2,g=3;
 
   for(i=1;i<argc;i++){
     if(strncmp(argv[i],"-fi",3)==0){
@@ -53,7 +52,8 @@ int main(int argc, char *argv[]){
   
   int N_pin_rings = 7;
   double pitch = 1.10;
-  double delta=0.025*(pitch-1.);
+  double delta=0.05*(pitch-1.);
+  int nx=6,ny=5;
 //double apoth =       ((double)N_pin_rings - 0.5)*pitch*cos(pio6);
 //double gamma = apoth-((double)N_pin_rings - 1.0)*pitch*cos(pio6);
 //double gap = gamma - 0.5;
@@ -82,7 +82,7 @@ int main(int argc, char *argv[]){
 
 //Layout the canonical type 2 subchannel (edge)
 //incorporate apothem and gap size later 2025-04-22
-  int npts2=16;
+  int npts2=14;
   point type2[npts2];
 
   type2[0]=origin;
@@ -93,7 +93,14 @@ int main(int argc, char *argv[]){
   type2[5]=line_circle_intercept(type2[4],type2[1],type2[1],0.5);
   type2[6]=line_circle_intercept(type2[0],type2[1],type2[1],0.5);
   type2[7]=line_circle_intercept(type2[2],type2[1],type2[1],0.5);
-  type2[8]=midpoint(type2[1],type2[2]);
+  type2[8]=line_circle_intercept(type2[1],type2[2],type2[2],0.5);
+  type2[10]=line_circle_intercept(type2[3],type2[2],type2[2],0.5);
+  type2[9]=midpoint(type2[8],type2[10]);
+  type2[11]=line_circle_intercept(type2[2],type2[3],type2[3],0.5);
+  type2[12]=line_circle_intercept(type2[0],type2[3],type2[3],0.5);
+  type2[13]=line_circle_intercept(type2[1],type2[3],type2[3],0.5);
+  //adjust 8, 9, 10 for gap size
+/*
   type2[9]=rotate_point(type2[5],2.*pio3,type2[0]);
   type2[11]=rotate_point(type2[7],2.*pio3,type2[0]);
   type2[10]=midpoint(type2[9],type2[11]);
@@ -102,17 +109,23 @@ int main(int argc, char *argv[]){
   type2[14]=rotate_point(type2[6],4.*pio3,type2[0]);
   type2[15]=rotate_point(type2[7],4.*pio3,type2[0]);
   //adjust 9, 10, 11 for gap size
-  
+*/
 //Layout the canonical type 3 subchannel (corner)
 //incorporate apothem and gap size later 2025-04-22
-  int npts3=13;
+  int npts3=8;
   point type3[npts3];
 
   type3[0]=origin;
   type3[1].x=-0.5*pitch;type3[1].y=-0.5*pitch*tan(pio6);
   type3[2]=rotate_point(type3[1],2.*pio3,type3[0]);
   type3[3]=rotate_point(type3[1],4.*pio3,type3[0]);
-  type3[4]=line_circle_intercept(type3[3],type3[1],type3[1],0.5);
+  type3[4]=line_circle_intercept(type3[2],type3[1],type3[1],0.5);
+  type3[5]=line_circle_intercept(type3[1],type3[2],type3[2],0.5);
+  type3[6]=line_circle_intercept(type3[1],type3[3],type3[3],0.5);
+  type3[7]=line_circle_intercept(type3[3],type3[1],type3[1],0.5);
+  //adjust 5, 6 for gap size
+
+/*
   type3[5]=line_circle_intercept(type3[0],type3[1],type3[1],0.5);
   type3[6]=line_circle_intercept(type3[2],type3[1],type3[1],0.5);
   type3[7]=midpoint(type3[1],type3[2]);
@@ -122,6 +135,7 @@ int main(int argc, char *argv[]){
   type3[10]=line_circle_intercept(type3[1],type3[3],type3[3],0.5);
   type3[9]=midpoint(type3[8],type3[10]);
   type3[12]=midpoint(type3[5],type3[9]);
+*/
  
 //make the mesh 
   for(int ipring=1;ipring<=N_pin_rings;ipring++){
@@ -133,14 +147,14 @@ int main(int argc, char *argv[]){
 
         for(int iang=0;iang<6;iang++){
           for(int ipt=0;ipt<npts1;ipt++) points[ipt]=rotate_point(points[ipt],pio3,origin);
-          make_type1_subchannel(2,3,delta,0);
+          make_type1_subchannel(nx,ny,delta,0);
         }
       }else{
         for(int ipt=0;ipt<npts3;ipt++) points[ipt]=translate_point(type3[ipt],translate);
 
         for(int iang=0;iang<6;iang++){
           for(int ipt=0;ipt<npts3;ipt++) points[ipt]=rotate_point(points[ipt],pio3,origin);
-          make_type3_subchannel(2,3,delta,0);
+          make_type3_subchannel(nx,ny,delta,0);
         }
       }
       translate.x-=0.5*pitch;
@@ -155,14 +169,14 @@ int main(int argc, char *argv[]){
 
         for(int iang=0;iang<6;iang++){
           for(int ipt=0;ipt<npts1;ipt++) points[ipt]=rotate_point(points[ipt],pio3,origin);
-          make_type1_subchannel(2,3,delta,0);
+          make_type1_subchannel(nx,ny,delta,0);
         }
       }else{
         for(int ipt=0;ipt<npts2;ipt++) points[ipt]=translate_point(type2[ipt],translate);
 
         for(int iang=0;iang<6;iang++){
           for(int ipt=0;ipt<npts2;ipt++) points[ipt]=rotate_point(points[ipt],pio3,origin);
-          make_type2_subchannel(2,3,delta,0);
+          make_type2_subchannel(nx,ny,delta,0);
         }
       }
       translate.x-=0.5*pitch;
@@ -224,25 +238,73 @@ int make_type2_subchannel(int nx,int ny,double delta,int pid0){
   for(int i=0;i<4;i++) for(int j=0;j<2;j++) sprintf(bcs[i][j],"E  ");
   sprintf(bcs[0][0],"W  ");
   sprintf(bcs[0][1],"f  ");
-  
-  for(int ibox=0;ibox<3;ibox++){
-    corners[0]=shift[5+ibox*4];
-    corners[1]=shift[6+ibox*4];
-    corners[2]=shift[0];
-    corners[3]=shift[4+ibox*4];
-    if(ibox==1) {make_gquad_space(nx,ny,delta,corners,bcs);}
-    else{make_cgquad_space(nx,ny,-0.5,delta,0.0,corners,bcs);}
-  }
 
-  for(int ibox=0;ibox<3;ibox++){
+  if(nx%2==1){
+
+    corners[0]=shift[5];
+    corners[1]=shift[6];
+    corners[2]=shift[9];
+    corners[3]=shift[4];
+    make_cgquad_space(nx,ny,-0.5,delta,0.0,corners,bcs);
+
+    corners[0]=shift[12];
+    corners[1]=shift[13];
+    corners[2]=shift[4];
+    corners[3]=shift[9];
+    make_cgquad_space(nx,ny,-0.5,delta,0.0,corners,bcs);
+
+    sprintf(bcs[2][0],"W  ");
+    sprintf(bcs[2][1],"f  ");
+
+    corners[0]=shift[6];
+    corners[1]=shift[7];
+    corners[2]=shift[8];
+    corners[3]=shift[9];
+    make_cgquad_space(nx,ny,-0.5,delta,0.0,corners,bcs);
+
+    corners[0]=shift[11];
+    corners[1]=shift[12];
+    corners[2]=shift[9];
+    corners[3]=shift[10];
+    make_cgquad_space(nx,ny,-0.5,delta,0.0,corners,bcs);
+
+  }else{
+
+    corners[0]=shift[5];
+    corners[1]=shift[6];
+    corners[2]=shift[0];
+    corners[3]=shift[4];
+    make_cgquad_space(nx,ny,-0.5,delta,0.0,corners,bcs);
+
+    corners[0]=shift[12];
+    corners[1]=shift[13];
+    corners[2]=shift[4];
     corners[3]=shift[0];
-    corners[0]=shift[6+ibox*4];
-    corners[1]=shift[7+ibox*4];
-    corners[2]=shift[8+ibox*4];
-    if(ibox==2) corners[2]=shift[4];
-    if(ibox==1) {make_gquad_space(nx,ny,delta,corners,bcs);}
-    else {make_cgquad_space(nx,ny,-0.5,delta,0.0,corners,bcs);}
-  }
+    make_cgquad_space(nx,ny,-0.5,delta,0.0,corners,bcs);
+
+    corners[0]=shift[6];
+    corners[1]=shift[7];
+    corners[2]=shift[8];
+    corners[3]=shift[0];
+    make_cgquad_space(nx,ny,-0.5,delta,0.0,corners,bcs);
+
+    corners[0]=shift[11];
+    corners[1]=shift[12];
+    corners[2]=shift[0];
+    corners[3]=shift[10];
+    make_cgquad_space(nx,ny,-0.5,delta,0.0,corners,bcs);
+
+    corners[0]=shift[8];
+    corners[1]=shift[10];
+    corners[2]=shift[0];
+    make_tri_space(nx/2,corners,bcs);
+/*
+    corners[0]=shift[9];
+    corners[1]=shift[10];
+    corners[2]=shift[0];
+    make_tri_space(nx/2,corners,bcs);
+*/
+   }
 
 return 0;
 }
@@ -257,13 +319,15 @@ int make_type3_subchannel(int nx,int ny,double delta,int pid0){
   for(int i=0;i<4;i++) for(int j=0;j<2;j++) sprintf(bcs[i][j],"E  ");
   sprintf(bcs[0][0],"W  ");
   sprintf(bcs[0][1],"f  ");
+  sprintf(bcs[2][0],"W  ");
+  sprintf(bcs[2][1],"f  ");
 
-  corners[0]=shift[4];
-  corners[1]=shift[5];
-  corners[2]=shift[12];
-  corners[3]=shift[11];
-  make_cgquad_space(nx,ny,-0.5,delta,0.0,corners,bcs);
-
+  corners[0]=shift[7];
+  corners[1]=shift[4];
+  corners[2]=shift[5];
+  corners[3]=shift[6];
+  make_cgquad_space(2*nx,ny,-0.5,delta,0.0,corners,bcs);
+/*
   corners[0]=shift[5];
   corners[1]=shift[6];
   corners[2]=shift[7];
@@ -281,7 +345,7 @@ int make_type3_subchannel(int nx,int ny,double delta,int pid0){
   corners[2]=shift[11];
   corners[3]=shift[12];
   make_gquad_space(nx,ny,delta,corners,bcs);
-
+*/
 return 0;
 }
   
