@@ -12,7 +12,7 @@ point line_circle_intercept(point p1,point p2,point pc,double rr){
     double C=pc.y*pc.y-rr*rr+pc.x*pc.x-2.0*c*pc.y+c*c;
     double des=B*B-4.0*A*C;
     if(des<0.0){
-      printf("error: undefined intercept\n");
+      printf("Error in line_circle_intercept: undefined intercept!\n%f, %f\t%f, %f\n%f, %f\t,%f\n",p1.x,p1.y,p2.x,p2.y,pc.x,pc.y,rr);
       pi.x=0.0;
       pi.y=0.0;
       return pi;

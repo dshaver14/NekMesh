@@ -50,18 +50,18 @@ int main(int argc, char *argv[]){
 //read the points from the input file
 //read_inp(inname);
   
-  int N_pin_rings = 3;
-  double pitch = 1.10;
-  double delta=0.05*(pitch-1.);
-  double deltag=delta*2.5;
-  int nx=2,ny=3,ng=3;
-  double apoth =        ((double)N_pin_rings - 1.0)*pitch*cos(pio6)+0.5+0.1;
+  int N_pin_rings = 7;
+  double pitch = 1.1;
+  double deltag=0.10*(pitch-1.);
+  double delta=deltag*1.5;
+  int nx=1,ny=3,ng=4;
+  double apoth =        ((double)N_pin_rings - 1.0)*pitch*cos(pio6)+0.5+0.12;
   double gap = apoth - (((double)N_pin_rings - 1.0)*pitch*cos(pio6)+0.5);
   double gap_min = ((double)ny*delta+(double)ng*deltag)*1.01;
   if(gap<gap_min) {
-    printf("Warning: gap between pin and hexcan wall too small for requested BL spacing. %f > %f\n",gap,gap_min);
+    printf("Warning: gap between pin and hexcan wall too small for requested BL spacing. %f < %f\n",gap,gap_min);
     gap=gap_min;
-  } else if(gap<(pitch-1.0)) printf("Warning: gap between pin and hexcan wall less than gap between pins!\n");
+  } else if(gap<(pitch-1.0)) printf("Warning: gap between pin and hexcan wall less than gap between pins! %f < %f \n",gap,pitch-1.0);
 
   points=malloc(16*sizeof(point));
 
@@ -85,7 +85,6 @@ int main(int argc, char *argv[]){
   output_pts(type1,npts1,inname);
 
 //Layout the canonical type 2 subchannel (edge)
-//incorporate apothem and gap size later 2025-04-22
   int npts2=16;
   point type2[npts2];
 
@@ -122,8 +121,8 @@ int main(int argc, char *argv[]){
   type3[2]=rotate_point(type3[1],2.*pio3,type3[0]);
   type3[3]=rotate_point(type3[1],4.*pio3,type3[0]);
   type3[4]=midpoint(type3[1],type3[3]);
-  type3[5]=line_circle_intercept(type3[1],type3[3],type3[1],0.5);
-  type3[6]=line_circle_intercept(type3[1],type3[2],type3[1],0.5);
+  type3[5]=line_circle_intercept(type3[3],type3[1],type3[1],0.5);
+  type3[6]=line_circle_intercept(type3[2],type3[1],type3[1],0.5);
   type3[7]=midpoint(type3[1],type3[2]);
   //adjust 8, 9 for gap size
   type3[8]=type3[1];
@@ -131,11 +130,22 @@ int main(int argc, char *argv[]){
   type3[9]=rotate_point(type3[8],pio3,type3[1]);
   type3[10]=rotate_point(type3[6],pio6,type3[1]);
   type3[11]=line_line_intercept(type3[8],type3[9],type3[10],type3[0]);
-//type3[12]=rotate_point(type3[7],pio6,type3[1]);
-  type3[12]=midpoint(type3[10],type3[11]);
+  type3[12]=rotate_point(type3[7],pio6,type3[1]);
+//type3[12]=midpoint(type3[10],type3[11]);
   type3[13]=line_circle_intercept(type3[1],type3[2],type3[2],0.5);
   type3[13]=translate_point(type3[13],translate);
   type3[14]=reflect_point(type3[13],type3[1],type3[0]);
+
+  double del1=distance(type3[11],type3[10]);
+  double del2=distance(type3[12],type3[10]);
+  
+  if((del1-del2)<0.0){
+    printf("Error: hexcan too tight for adopted meshing strategy!\n");
+    return 0;
+  }else if((del1-del2)<(double)ng*deltag){
+    printf("Error: gap size too small for requested hexcan BL spacing!\n");
+    return 0;
+  }
 
   sprintf(inname,"type3.dat");
   output_pts(type3,npts3,inname);
@@ -290,27 +300,32 @@ int make_type3_subchannel(int nx,int ny,int ng,double delta,double deltag,int su
   corners[1]=shift[10];
   corners[2]=shift[12];
   corners[3]=shift[4];
-  make_cgquad_space(nx,ny,-0.5,delta,0.0,corners,bcs);
+  make_garc_space(nx,ny,-0.5,1,delta,corners,bcs);
 
   corners[0]=shift[10];
   corners[1]=shift[6];
   corners[2]=shift[7];
   corners[3]=shift[12];
-  make_cgquad_space(nx,ny,-0.5,delta,0.0,corners,bcs);
+  make_garc_space(nx,ny,-0.5,1,delta,corners,bcs);
 
-  if(subtype==1||subtype==2) corners[0]=shift[8];
-  if(subtype==3||subtype==4) corners[0]=shift[13];
-  corners[1]=shift[11];
-  corners[2]=shift[12];
-  corners[3]=shift[7];
-  make_gquad_space(nx,ng,deltag,corners,bcs);
-  
-  corners[0]=shift[11];
-  if(subtype==1||subtype==4) corners[1]=shift[9];
-  if(subtype==2||subtype==3) corners[1]=shift[14];
-  corners[2]=shift[4];
-  corners[3]=shift[12];
-  make_gquad_space(nx,ng,deltag,corners,bcs);
+  for(int i=0;i<4;i++) for(int j=0;j<2;j++) sprintf(bcs[i][j],"E  ");
+  sprintf(bcs[2][0],"W  ");
+  sprintf(bcs[2][1],"f  ");
+
+  double rr=0.5+distance(shift[6],shift[7]);
+  if(subtype==1||subtype==2) corners[2]=shift[8];
+  if(subtype==3||subtype==4) corners[2]=shift[13];
+  corners[3]=shift[11];
+  corners[0]=shift[12];
+  corners[1]=shift[7];
+  make_cgquad_space(nx,ng,-rr,-deltag,0.0,corners,bcs);
+
+  corners[2]=shift[11];
+  if(subtype==1||subtype==4) corners[3]=shift[9];
+  if(subtype==2||subtype==3) corners[3]=shift[14];
+  corners[0]=shift[4];
+  corners[1]=shift[12];
+  make_cgquad_space(nx,ng,-rr,-deltag,0.0,corners,bcs);
 
 return 0;
 }
