@@ -3,7 +3,7 @@
 if [ -e nekmesh ];then rm nekmesh; fi
 
 echo "Compiling from $1.c"
-gcc $1.c -lm -o nekmesh
+gcc -std=gnu99 $1.c -o nekmesh -lm
 
 if [ ! -e nekmesh ];then 
   echo "compilation error!"
