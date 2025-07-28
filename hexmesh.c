@@ -7,10 +7,11 @@
 int make_type1_subchannel(int,int,double,int);
 int make_type2_subchannel(int,int,int,double,double,int);
 int make_type3_subchannel(int,int,int,double,double,int,int);
+int set_E_bcs(boundary_condition*);
 
-int nquad=0,npts=0,nelem=0,nvert=0,ncide=0,nfld=2;
+int nquad=0,npts=0,nelem=0,nvert=0,ncide=0,nfld=1;
 
-block blocks[max_block];
+//block blocks[max_block];
 quad elems[max_elem];
 point verts[4*max_elem];
 edge cides[4*max_elem];
@@ -25,10 +26,19 @@ static point origin={0.0, 0.0};
 #include "core/output.c"
 #include "core/read_inp.c"
 
+int set_E_bcs(boundary_condition *BC){
+
+  for(int i=0;i<4;i++){
+    BC->ID[i]=0;
+    for(int j=0;j<2;j++) sprintf(BC->cbc[i][j],"E  ");
+  }
+
+return 0; 
+}
+
 int main(int argc, char *argv[]){
 
   char inname[64],reaname[64];
-  char bcs[4][2][4];
 
   point corners[4];
   point translate;
@@ -50,13 +60,15 @@ int main(int argc, char *argv[]){
 //read the points from the input file
 //read_inp(inname);
   
-  int N_pin_rings = 7;
-  double pitch = 1.1;
+  int N_pin_rings = 3;
+  double pitch = 1.15676;
   double deltag=0.10*(pitch-1.);
   double delta=deltag*1.5;
-  int nx=1,ny=3,ng=4;
-  double apoth =        ((double)N_pin_rings - 1.0)*pitch*cos(pio6)+0.5+0.12;
-  double gap = apoth - (((double)N_pin_rings - 1.0)*pitch*cos(pio6)+0.5);
+  int nx=2,ny=3,ng=3;
+//double apoth =        ((double)N_pin_rings - 1.0)*pitch*cos(pio6)+0.5+0.12;
+//double gap = apoth - (((double)N_pin_rings - 1.0)*pitch*cos(pio6)+0.5);
+  double apoth = 7.32432/2.0;
+  double gap = apoth - (((double)4 - 1.0)*pitch*cos(pio6)+0.5);
   double gap_min = ((double)ny*delta+(double)ng*deltag)*1.01;
   if(gap<gap_min) {
     printf("Warning: gap between pin and hexcan wall too small for requested BL spacing. %f < %f\n",gap,gap_min);
@@ -218,21 +230,22 @@ return 0;
 
 int make_type1_subchannel(int nx,int ny,double delta,int pid0){
 
-  char bcs[4][2][4];
+  boundary_condition BC;
   point corners[4];
 
   point *shift=&points[pid0];
 
-  for(int i=0;i<4;i++) for(int j=0;j<2;j++) sprintf(bcs[i][j],"E  ");
-  sprintf(bcs[0][0],"W  ");
-  sprintf(bcs[0][1],"f  ");
+  set_E_bcs(&BC);
+  BC.ID[0]=1;
+  sprintf(BC.cbc[0][0],"pin");
+  sprintf(BC.cbc[0][1],"pin");
   
   for(int ibox=0;ibox<3;ibox++){
     corners[0]=shift[5+ibox*4];
     corners[1]=shift[6+ibox*4];
     corners[2]=shift[0];
     corners[3]=shift[4+ibox*4];
-    make_cgquad_space(nx,ny,-0.5,delta,0.0,corners,bcs);
+    make_cgquad_space(nx,ny,-0.5,delta,0.0,corners,BC.cbc);
   }
 
   for(int ibox=0;ibox<3;ibox++){
@@ -241,7 +254,7 @@ int make_type1_subchannel(int nx,int ny,double delta,int pid0){
     corners[1]=shift[7+ibox*4];
     if(ibox==2) {corners[2]=shift[4];}
     else {corners[2]=shift[8+ibox*4];}
-    make_cgquad_space(nx,ny,-0.5,delta,0.0,corners,bcs);
+    make_cgquad_space(nx,ny,-0.5,delta,0.0,corners,BC.cbc);
   }
 
 return 0;
@@ -249,32 +262,43 @@ return 0;
 
 int make_type2_subchannel(int nx,int ny,int ng,double delta,double deltag,int pid0){
 
-  char bcs[4][2][4];
   point corners[4];
+  boundary_condition BC;
 
   point *shift=&points[pid0];
 
-  for(int i=0;i<4;i++) for(int j=0;j<2;j++) sprintf(bcs[i][j],"E  ");
-  sprintf(bcs[0][0],"W  ");
-  sprintf(bcs[0][1],"f  ");
+  set_E_bcs(&BC);
 
   for(int ibox=0;ibox<3;ibox++){
+    BC.ID[0]=1;
+    sprintf(BC.cbc[0][0],"pin");
+    sprintf(BC.cbc[0][1],"pin");
     corners[0]=shift[5+ibox*4];
     corners[1]=shift[6+ibox*4];
     corners[2]=shift[0];
     corners[3]=shift[4+ibox*4];
-    if(ibox==1) make_gquad_space(nx,ng,deltag,corners,bcs);
-    else make_cgquad_space(nx,ny,-0.5,delta,0.0,corners,bcs);
+    if(ibox==1){  
+      BC.ID[0]=2;
+      sprintf(BC.cbc[0][0],"can");
+      sprintf(BC.cbc[0][1],"can");
+      make_gquad_space(nx,ng,deltag,corners,BC.cbc);
+    }
+    else make_cgquad_space(nx,ny,-0.5,delta,0.0,corners,BC.cbc);
   }
 
   for(int ibox=0;ibox<3;ibox++){
+    sprintf(BC.cbc[0][0],"pin");
+    sprintf(BC.cbc[0][1],"pin");
     corners[3]=shift[0];
     corners[0]=shift[6+ibox*4];
     corners[1]=shift[7+ibox*4];
     if(ibox==2) {corners[2]=shift[4];}
     else {corners[2]=shift[8+ibox*4];}
-    if(ibox==1) make_gquad_space(nx,ng,deltag,corners,bcs);
-    else make_cgquad_space(nx,ny,-0.5,delta,0.0,corners,bcs);
+    if(ibox==1){
+      sprintf(BC.cbc[0][0],"can");
+      sprintf(BC.cbc[0][1],"can");
+      make_gquad_space(nx,ng,deltag,corners,BC.cbc);
+    } else make_cgquad_space(nx,ny,-0.5,delta,0.0,corners,BC.cbc);
   }
 
 return 0;
@@ -282,8 +306,8 @@ return 0;
 
 int make_type3_subchannel(int nx,int ny,int ng,double delta,double deltag,int subtype,int pid0){
 
-  char bcs[4][2][4];
   point corners[4];
+  boundary_condition BC;
 
   point *shift=&points[pid0];
 
@@ -292,25 +316,25 @@ int make_type3_subchannel(int nx,int ny,int ng,double delta,double deltag,int su
     return 0;
   }
 
-  for(int i=0;i<4;i++) for(int j=0;j<2;j++) sprintf(bcs[i][j],"E  ");
-  sprintf(bcs[0][0],"W  ");
-  sprintf(bcs[0][1],"f  ");
+  set_E_bcs(&BC);
+  sprintf(BC.cbc[0][0],"pin");
+  sprintf(BC.cbc[0][1],"pin");
 
   corners[0]=shift[5];
   corners[1]=shift[10];
   corners[2]=shift[12];
   corners[3]=shift[4];
-  make_garc_space(nx,ny,-0.5,1,delta,corners,bcs);
+  make_garc_space(nx,ny,-0.5,1,delta,corners,BC.cbc);
 
   corners[0]=shift[10];
   corners[1]=shift[6];
   corners[2]=shift[7];
   corners[3]=shift[12];
-  make_garc_space(nx,ny,-0.5,1,delta,corners,bcs);
+  make_garc_space(nx,ny,-0.5,1,delta,corners,BC.cbc);
 
-  for(int i=0;i<4;i++) for(int j=0;j<2;j++) sprintf(bcs[i][j],"E  ");
-  sprintf(bcs[2][0],"W  ");
-  sprintf(bcs[2][1],"f  ");
+  set_E_bcs(&BC);
+  sprintf(BC.cbc[2][0],"can");
+  sprintf(BC.cbc[2][1],"can");
 
   double rr=0.5+distance(shift[6],shift[7]);
   if(subtype==1||subtype==2) corners[2]=shift[8];
@@ -318,15 +342,14 @@ int make_type3_subchannel(int nx,int ny,int ng,double delta,double deltag,int su
   corners[3]=shift[11];
   corners[0]=shift[12];
   corners[1]=shift[7];
-  make_cgquad_space(nx,ng,-rr,-deltag,0.0,corners,bcs);
+  make_cgquad_space(nx,ng,-rr,-deltag,0.0,corners,BC.cbc);
 
   corners[2]=shift[11];
   if(subtype==1||subtype==4) corners[3]=shift[9];
   if(subtype==2||subtype==3) corners[3]=shift[14];
   corners[0]=shift[4];
   corners[1]=shift[12];
-  make_cgquad_space(nx,ng,-rr,-deltag,0.0,corners,bcs);
+  make_cgquad_space(nx,ng,-rr,-deltag,0.0,corners,BC.cbc);
 
 return 0;
 }
-  
