@@ -2,6 +2,7 @@
 #define max_block 25
 
 typedef struct { double x; double y; double z;} point;
+typedef struct { int ID[4]; char cbc[4][2][4];} boundary_condition;
 typedef struct { int n; point *p;} connector;
 typedef struct { int elid; int esid; double curve; char ccurve;} edge;
 typedef struct { int vid[4]; char BC[4][2][4];} quad;
