@@ -167,6 +167,80 @@ int rotate_element(quad *elem){
 return 0;
 }
 //-------------------------------------------------------------------
+int write_vtk_bin(char *fname){
+
+  FILE *vtkout;
+  int *bufout;
+
+  vtkout = fopen(fname,"wb");
+  bufout = (int *)malloc(5*sizeof(int));
+
+  fprintf(vtkout,"%s\n","# vtk DataFile Version 3.0");
+  fprintf(vtkout,"%s\n",fname);
+  fprintf(vtkout,"%s\n","BINARY");
+  fprintf(vtkout,"%s\n","DATASET UNSTRUCTURED_GRID");
+
+//Points section
+  fprintf(vtkout,"%s%d%s\n","POINTS ",nvert," double");
+  for(int ivrt=0;ivrt<nvert;ivrt++) fwrite(&verts[ivrt],sizeof(double),3,vtkout);
+  fprintf(vtkout,"\n\n"); //write blank line
+
+//Elements section
+  fprintf(vtkout,"%s %d %d\n","CELLS",nelem,nelem*5);
+  *(bufout+0)=4;
+  for(int iel=0;iel<nelem;iel++){
+    memcpy(bufout+1,elems[iel].vid,sizeof(int)*4);
+    fwrite(bufout,sizeof(int),5,vtkout);
+  }
+  fprintf(vtkout,"\n\n"); //write blank line
+  
+//Element type section
+  fprintf(vtkout,"%s %d\n","CELL_TYPES",nelem);
+  *(bufout+0)=9; //VTK CELL ID for a quad
+//*(bufout+0)=12; //VTK CELL ID for a hex
+  for(int iel=0;iel<nelem;iel++) fwrite(bufout,sizeof(int),1,vtkout);
+
+  fclose(vtkout);
+
+return 0;
+}
+//-------------------------------------------------------------------
+int write_vtk_ASCII(char *fname){
+
+  FILE *vtkout;
+  int *bufout;
+
+  vtkout = fopen(fname,"w");
+  bufout = (int *)malloc(5*sizeof(int));
+
+  fprintf(vtkout,"%s\n","# vtk DataFile Version 3.0");
+  fprintf(vtkout,"%s\n",fname);
+  fprintf(vtkout,"%s\n","ASCII");
+  fprintf(vtkout,"%s\n","DATASET UNSTRUCTURED_GRID");
+
+//Points section
+  fprintf(vtkout,"%s%d%s\n","POINTS ",nvert," float");
+  for(int ivrt=0;ivrt<nvert;ivrt++) fprintf(vtkout,"%f %f %f\n",verts[ivrt].x,verts[ivrt].y,0.0);
+  fprintf(vtkout,"\n"); //write blank line
+
+//Elements section
+  fprintf(vtkout,"%s %d %d\n","CELLS",nelem,nelem*5);
+  for(int iel=0;iel<nelem;iel++) fprintf(vtkout,"%d %d %d %d %d\n",4,
+    elems[iel].vid[0],
+    elems[iel].vid[1],
+    elems[iel].vid[2],
+    elems[iel].vid[3]);
+  fprintf(vtkout,"\n"); //write blank line
+
+//Element type section
+  fprintf(vtkout,"%s %d\n","CELL_TYPES",nelem);
+  for(int iel=0;iel<nelem;iel++) fprintf(vtkout,"%d\n",9);
+
+  fclose(vtkout);
+
+return 0;
+}
+//-------------------------------------------------------------------
 int reset(void){
   printf("\n\treseting mesh generator\n\n");
   nelem = 0;

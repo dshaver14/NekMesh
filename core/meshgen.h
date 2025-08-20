@@ -59,6 +59,7 @@ int invert(double*,int);
 int invert_connector(connector*);
 
 int write_rea(char*);
+int write_vtk(char*);
 int axi_consistency_check(quad*);
 int rotate_element(quad*);
 int reset(void);

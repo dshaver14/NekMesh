@@ -46,6 +46,18 @@ int main(int argc, char *argv[]){
   int i,j,k,n;
 
   static double pio6=M_PI/6., pio3=M_PI/3.;
+  translate.z=0.0;
+
+  for(int ivrt=0;ivrt<4*max_elem;ivrt++){
+    verts[ivrt].x=0.0;
+    verts[ivrt].y=0.0;
+    verts[ivrt].z=0.0;
+  }
+
+  nvert=8;
+  sprintf(reaname,"test.vtk");
+  write_vtk_ASCII(reaname);
+  nvert=0;
 
   for(i=1;i<argc;i++){
     if(strncmp(argv[i],"-fi",3)==0){
@@ -218,7 +230,10 @@ int main(int argc, char *argv[]){
 //sprintf(reaname,"type3.dat");
 //output_pts(points,npts3,reaname);
 
-  write_rea(reaname);
+//write_rea(reaname);
+
+  sprintf(reaname,"hexmesh.vtk");
+  write_vtk_ASCII(reaname);
     
 //  sprintf(reaname,"pts.dat");
 //  output_pts(points,npts,reaname);
