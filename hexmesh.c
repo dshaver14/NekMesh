@@ -46,6 +46,13 @@ int main(int argc, char *argv[]){
   int i,j,k,n;
 
   static double pio6=M_PI/6., pio3=M_PI/3.;
+  translate.z=0.0;
+
+  for(int ivrt=0;ivrt<4*max_elem;ivrt++){
+    verts[ivrt].x=0.0;
+    verts[ivrt].y=0.0;
+    verts[ivrt].z=0.0;
+  }
 
   for(i=1;i<argc;i++){
     if(strncmp(argv[i],"-fi",3)==0){
@@ -80,6 +87,7 @@ int main(int argc, char *argv[]){
 //Layout the canonical type 1 subchannel (center)
   int npts1=16;
   point type1[npts1];
+  for(int ipt=0;ipt<npts1;ipt++) type1[ipt].z=0.0;
   
   type1[0]=origin;
   type1[1].x=0.5*pitch;type1[1].y=-0.5*tan(pio6)*pitch;
@@ -99,6 +107,7 @@ int main(int argc, char *argv[]){
 //Layout the canonical type 2 subchannel (edge)
   int npts2=16;
   point type2[npts2];
+  for(int ipt=0;ipt<npts2;ipt++) type2[ipt].z=0.0;
 
   type2[0]=origin;
   type2[1].x=0.0;type2[1].y=-pitch/(2.*cos(pio6));
@@ -127,6 +136,7 @@ int main(int argc, char *argv[]){
 //incorporate apothem and gap size later 2025-04-22
   int npts3=15;
   point type3[npts3];
+  for(int ipt=0;ipt<npts3;ipt++) type3[ipt].z=0.0;
 
   type3[0]=origin;
   type3[1].x=-0.5*pitch;type3[1].y=-0.5*pitch*tan(pio6);
