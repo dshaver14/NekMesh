@@ -1,3 +1,15 @@
+point get_fermat(point *p){
+  static double psi = M_PI/3.0;
+
+  point v[2],out;
+
+  v[0]=rotate_point(p[1],-psi,p[0]);
+  v[1]=rotate_point(p[1],psi,p[2]);
+  out=line_line_intercept(p[0],v[1],v[0],p[2]);
+
+  return out;
+}
+
 int make_tri_space(int ne,point *p,char bcs[4][2][4]){
 
   char bc[4][2][4];
@@ -11,7 +23,8 @@ int make_tri_space(int ne,point *p,char bcs[4][2][4]){
     j=(i+1)%3;
     mp[i]=midpoint(p[i],p[j]);
   }
-  cp=line_line_intercept(p[0],mp[1],p[2],mp[0]);
+//cp=line_line_intercept(p[0],mp[1],p[2],mp[0]);
+  cp=get_fermat(mp);
 
   corners[2]=cp;
   sprintf(bc[1][0],"E  ");

@@ -334,20 +334,13 @@ int make_cgquad_space(int nt,int nr,double R,double dr0,double dt0,point *p,char
   
   pc=circle_center_2pR(p[0],p[1],R);
 
-  r.n=nr+1;
-  r.p=(point *)malloc(sizeof(point)*r.n);
-  r2.n=nr+1;
-  r2.p=(point *)malloc(sizeof(point)*r2.n);
-  r4.n=nr+1;
-  r4.p=(point *)malloc(sizeof(point)*r4.n);
-  r3.n=nt+1;
-  r3.p=(point *)malloc(sizeof(point)*r3.n);
+  initialize_con(&r,nr);
+  initialize_con(&r2,nr);
+  initialize_con(&r3,nt);
+  initialize_con(&r4,nr);
+
   ta=(double *)malloc(sizeof(double)*(nt+1));
   rb=(double *)malloc(sizeof(double)*(nr+1));
-
-  if(dr0==0.0)dr0=0.5*(distance(p[1],p[2])+distance(p[0],p[3]))/((double)nr);
-  *rb=R;
-  *(rb+1)=R-dr0;
 
 //      3-----s3-----2
 //      |            |
@@ -359,18 +352,36 @@ int make_cgquad_space(int nt,int nr,double R,double dr0,double dt0,point *p,char
 //  |
 //  *---->i,t  (r,theta)
 
+  *rb=R;
+  *(rb+1)=R-fabs(dr0);
 
-//side 2 (1-2)
-  r0=p[1];
-  r1=line_circle_intercept(p[1],p[2],pc,*(rb+1));
-  delta=distance(r0,r1);
-  get_g_side(p[1],p[2],delta,&r2);
+  if(dr0>0.0){
+  //geometric growth from arc side (s1)
+    //side 2 (1-2)
+    r0=p[1];
+    r1=line_circle_intercept(p[1],p[2],pc,*(rb+1));
+    delta=distance(r0,r1);
+    get_g_side(p[1],p[2],delta,&r2);
 
-//side 4 (0-3)
-  r0=p[0];
-  r1=line_circle_intercept(p[0],p[3],pc,*(rb+1));
-  delta=distance(r0,r1);
-  get_g_side(p[0],p[3],delta,&r4);
+    //side 4 (0-3)
+    r0=p[0];
+    r1=line_circle_intercept(p[0],p[3],pc,*(rb+1));
+    delta=distance(r0,r1);
+    get_g_side(p[0],p[3],delta,&r4);
+  }else if(dr0<0.0){
+  //geometric growth from linear side (s3)
+    //side 2 (1-2)
+    get_g_side(p[2],p[1],-dr0,&r2);
+    invert_connector(&r2);
+    //side 4 (0-3)
+    get_g_side(p[3],p[0],-dr0,&r4);
+    invert_connector(&r4);
+    *(rb+1)=R+(double)nr*fabs(dr0);
+  }else{
+    set_lin_side(p[1],p[2],&r2);
+    set_lin_side(p[0],p[3],&r4);
+    dr0=0.5*(distance(p[1],p[2])+distance(p[0],p[3]))/((double)nr);
+  }
 
   delta=distance(r4.p[0],r2.p[0]);
   theta=2.0*asin(delta/(2.0*fabs(R)));
@@ -402,14 +413,24 @@ int make_cgquad_space(int nt,int nr,double R,double dr0,double dt0,point *p,char
   }
 
   for(i=0;i<=nt;i++){
+    int j0;
     //j=0
     theta=-R/fabs(R)* *(ta+i);
     verts[nvert0+i]=rotate_point(r4.p[0],theta,pc);
     //j=1
-    verts[nvert0+i+nt+1]=line_circle_intercept(verts[nvert0+i],r3.p[i],pc,*(rb+1));
-   
-    for(j=2;j<=nr;j++){
-      if(j==2) get_g_side(verts[nvert0+i],r3.p[i],dr0,&r);
+    if(dr0>=0.0){
+      verts[nvert0+i+nt+1]=line_circle_intercept(verts[nvert0+i],r3.p[i],pc,*(rb+1));
+      j0=2;  
+    }else j0=1;
+ 
+    for(j=j0;j<=nr;j++){
+      if(j==j0){ 
+        if(dr0>0.0) { get_g_side(verts[nvert0+i],r3.p[i],dr0,&r);
+        }else if (dr0<0.0){
+          get_g_side(r3.p[i],verts[nvert0+i],-dr0,&r);
+          invert_connector(&r);
+        }else {set_lin_side(verts[nvert0+i],r3.p[i],&r);}
+      }
       verts[nvert0+i+j*(nt+1)]=r.p[j];
     }
   }
@@ -449,32 +470,48 @@ int make_cgquad_space(int nt,int nr,double R,double dr0,double dt0,point *p,char
           sprintf((elems+nelem)->BC[3][k],"E  ");
         }
       }
-      if(i<nr-1){
-        (cides+ncide)->elid=nelem;
-        (cides+ncide)->esid=1;
-        (cides+ncide)->curve=*(rb+i);
-        (cides+ncide)->ccurve='C';
-        ncide++;
-        (cides+ncide)->elid=nelem;
-        (cides+ncide)->esid=3;
-        (cides+ncide)->curve=-*(rb+i+1);
-        (cides+ncide)->ccurve='C';
-        ncide++;
+      if(dr0>0.0){
+        if(i<nr-1){
+          (cides+ncide)->elid=nelem;
+          (cides+ncide)->esid=1;
+          (cides+ncide)->curve=*(rb+i);
+          (cides+ncide)->ccurve='C';
+          ncide++;
+          (cides+ncide)->elid=nelem;
+          (cides+ncide)->esid=3;
+          (cides+ncide)->curve=-*(rb+i+1);
+          (cides+ncide)->ccurve='C';
+          ncide++;
+        }else{
+          (cides+ncide)->elid=nelem;
+          (cides+ncide)->esid=1;
+          (cides+ncide)->curve=*(rb+i);
+          (cides+ncide)->ccurve='C';
+          ncide++;
+        }
       }else{
-        (cides+ncide)->elid=nelem;
-        (cides+ncide)->esid=1;
-        (cides+ncide)->curve=*(rb+i);
-        (cides+ncide)->ccurve='C';
-        ncide++;
+        if(i==0){
+          (cides+ncide)->elid=nelem;
+          (cides+ncide)->esid=1;
+          (cides+ncide)->curve=R;
+          (cides+ncide)->ccurve='C';
+          ncide++;
+        }
       }
       nelem++;
     }
   }
 
+  dealloc_con(&r);
+  dealloc_con(&r2);
+  dealloc_con(&r3);
+  dealloc_con(&r4);
+/*
   free(r.p);
   free(r2.p);
   free(r3.p);
   free(r4.p);
+*/
   free(ta);free(rb);
   printf("nelem = %d, nvert = %d\n",nelem,nvert);
 

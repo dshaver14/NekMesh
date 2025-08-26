@@ -1,6 +1,7 @@
 point line_circle_intercept(point p1,point p2,point pc,double rr){
 
   point pi;
+  pi.z=0.0;
   double dx2,dy2;
   double dx1=p2.x-p1.x;
   double dy1=p2.y-p1.y;
@@ -12,7 +13,7 @@ point line_circle_intercept(point p1,point p2,point pc,double rr){
     double C=pc.y*pc.y-rr*rr+pc.x*pc.x-2.0*c*pc.y+c*c;
     double des=B*B-4.0*A*C;
     if(des<0.0){
-      printf("error: undefined intercept\n");
+      printf("Error in line_circle_intercept: undefined intercept!\n%f, %f\t%f, %f\n%f, %f\t%f\n",p1.x,p1.y,p2.x,p2.y,pc.x,pc.y,rr);
       pi.x=0.0;
       pi.y=0.0;
       return pi;
@@ -47,7 +48,7 @@ point line_circle_intercept(point p1,point p2,point pc,double rr){
 }
 
 point line_line_intercept(point p1,point p2,point p3, point p4){
-  point p0={0.0,0.0};
+  point p0={0.0,0.0,0.0};
   double denom=(p1.x-p2.x)*(p3.y-p4.y)-(p1.y-p2.y)*(p3.x-p4.x);
   if(fabs(denom)<1.0e-12){
     printf("Error in line_line_intercept: lines are parallel!");
@@ -68,6 +69,7 @@ point circle_center_2pR(point p0,point p1,double R){
   double bb = sqrt(R*R-aa*aa);
   double xa = 0.5*(p1.x-p0.x); double ya = 0.5*(p1.y-p0.y);
   point pc;
+  pc.z=0.0;
   if(R>0.0){ 
     pc.x = p0.x+xa-bb*ya/aa; 
     pc.y = p0.y+ya+bb*xa/aa;
@@ -84,6 +86,7 @@ point rotate_point(point pin,double theta,point zero){
 
   pout.x = (pin.x-zero.x)*cos(theta)-(pin.y-zero.y)*sin(theta)+zero.x;
   pout.y = (pin.x-zero.x)*sin(theta)+(pin.y-zero.y)*cos(theta)+zero.y;
+  pout.z = 0.0;
 
  return pout;
 }
@@ -101,6 +104,7 @@ point reflect_point(point pin,point p0,point p1){
   double RHS=-2.0*(a*pin.x+b*pin.y+c)/(a*a+b*b);
   pout.x=RHS*a+pin.x;
   pout.y=RHS*b+pin.y;
+  pout.z=0.0;
   return pout;
 }
 
@@ -116,6 +120,7 @@ point midpoint(point p1,point p2){
   point pout;
   pout.x=0.5*(p1.x+p2.x);
   pout.y=0.5*(p1.y+p2.y);
+  pout.z=0.5*(p1.z+p2.z);
   return pout;
 }
 
@@ -123,6 +128,7 @@ point linpoint(double del,point p1,point p2){
   point pout;
   pout.x=p1.x+(p2.x-p1.x)*del;
   pout.y=p1.y+(p2.y-p1.y)*del;
+  pout.z=p1.z+(p2.z-p1.z)*del;
   return pout;
 }
 
@@ -132,9 +138,11 @@ point centroid(point *p,int np){
   for(i=0;i<np;i++){
     pout.x+=(p+i)->x;
     pout.y+=(p+i)->y;
+    pout.z+=(p+i)->z;
   }
   pout.x/=(double)np;
   pout.y/=(double)np;
+  pout.z/=(double)np;
 
   return pout;
 }
@@ -175,6 +183,7 @@ point set_point(double xin,double yin){
   point pout; 
   pout.x=xin;
   pout.y=yin;
+  pout.z=0.0;
 
   return pout;
 }
