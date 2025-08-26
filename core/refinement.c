@@ -1,4 +1,4 @@
-int make_pframe_space(int N,int b,int c,point *p,char bcs[4][2][4]){
+int make_pframe_space(int Nin,int bin,int c,point *p,char bcs[4][2][4]){
 
   int a;
   double fact1,fact2;
@@ -11,7 +11,7 @@ int make_pframe_space(int N,int b,int c,point *p,char bcs[4][2][4]){
     return 0;
   }
 
-  a=(N-b)/2
+  a=(N-b)/2;
 
   printf("Generating %d elements in a quadrilateral picture frame space\n",(2*a+b)*c+(a*b));
 
@@ -19,13 +19,13 @@ int make_pframe_space(int N,int b,int c,point *p,char bcs[4][2][4]){
 //      |     |     |     |
 //      |     c     c     |
 //      |     |     |     |
-//     6c     8--b--9     c7
+//      c     6--b--7     c 
 //      |    /       \    |
-//     s4   /         \   s2
+//      |   /         \   | 
 //      |  a           a  |
 // j,s  | /             \ |
 //  ᴧ   |/               \|
-//  |   0----s1--b--------1
+//  |   0--------b--------1
 //  |
 //  *---->i,r
 
@@ -39,5 +39,9 @@ int make_pframe_space(int N,int b,int c,point *p,char bcs[4][2][4]){
   p9=linpoint(fact1,p7,p6);
 
 //make the 4 elements
-  (elems+nelem+0)->vid[0]=
+  set_4_bcs()
+
+//take points 0 - 5, generate 6 & 7
+
+//take points 0 - 3, generate 4 - 7
 
