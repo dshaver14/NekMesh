@@ -60,8 +60,6 @@ int invert_connector(connector*);
 
 int write_rea(char*);
 int write_vtk(char*);
-void swap(void*,size_t);
-int is_little_endian(void);
 int axi_consistency_check(quad*);
 int rotate_element(quad*);
 int reset(void);

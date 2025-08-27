@@ -167,85 +167,11 @@ int rotate_element(quad *elem){
 return 0;
 }
 //-------------------------------------------------------------------
-int write_vtk_bin(char *fname){
-
-  int byte_swap = 0,nvtx,cellid;
-  FILE *vtkout;
-  int *bufout;
-  float *pbuf;
-  float magic = 6.54321,fswap;
-
-  if(is_little_endian()) byte_swap=1; //vtk legacy should be big endian
-  printf("byte_swap = %d\n",byte_swap);
-
-  vtkout = fopen(fname,"wb");
-  pbuf = (float *)malloc(3*sizeof(float));
-  bufout = (int *)malloc(5*sizeof(int));
-
-  fprintf(vtkout,"%s\n","# vtk DataFile Version 3.0");
-  fprintf(vtkout,"%s\n",fname);
-  fprintf(vtkout,"%s\n","BINARY");
-  fprintf(vtkout,"%s\n","DATASET UNSTRUCTURED_GRID");
-
-//Points section
-  fprintf(vtkout,"%s%d%s\n","POINTS ",nvert," float");
-  for(int ivrt=0;ivrt<nvert;ivrt++){
-    *(pbuf+0)=(verts+ivrt)->x;
-    *(pbuf+1)=(verts+ivrt)->y;
-    *(pbuf+2)=(verts+ivrt)->z;
-    if(byte_swap) for(int i=0;i<3;i++) swap(&pbuf[i],sizeof(float));
-    fwrite(pbuf,sizeof(float),3,vtkout);
-  }
-  fprintf(vtkout,"\n"); //write blank line
-
-//Elements section
-  fprintf(vtkout,"%s %d %d\n","CELLS",nelem,nelem*5);
-  *(bufout+0)=4;
-  for(int iel=0;iel<nelem;iel++){
-    *(bufout+1)=(elems+iel)->vid[0];
-    *(bufout+2)=(elems+iel)->vid[1];
-    *(bufout+3)=(elems+iel)->vid[2];
-    *(bufout+4)=(elems+iel)->vid[3];
-    if(byte_swap) for (int i=0;i<5;i++) swap(&bufout[i],sizeof(int));
-    fwrite(bufout,sizeof(int),5,vtkout);
-  }
-  fprintf(vtkout,"\n"); //write blank line
-  
-//Element type section
-  fprintf(vtkout,"%s %d\n","CELL_TYPES",nelem);
-  *(bufout+0)=9; //VTK CELL ID for a quad
-//*(bufout+0)=12; //VTK CELL ID for a hex
-  if(byte_swap) swap(bufout,sizeof(int));
-  for(int iel=0;iel<nelem;iel++) fwrite(bufout,sizeof(int),1,vtkout);
-
-  fclose(vtkout);
-
-return 0;
-}
-//-------------------------------------------------------------------
-int is_little_endian() {
-  int i = 1;
-  char *p = (char *)&i;
-  return (p[0] == 1); // If the first byte is 1, it's little-endian
-}
-//-------------------------------------------------------------------
-void swap(void *a, size_t width)
-{
-  char   *v1 = (char *)a;
-  char   tmp[width];
-  size_t  i;
-
-  for (i=0; i<width; i++)tmp[i] = v1[width-1-i];
-  for (i=0; i<width; i++)v1[i] = tmp[i];
-}
-//-------------------------------------------------------------------
-int write_vtk_ASCII(char *fname){
+int write_vtk(char *fname){
 
   FILE *vtkout;
-  int *bufout;
 
   vtkout = fopen(fname,"w");
-  bufout = (int *)malloc(5*sizeof(int));
 
   fprintf(vtkout,"%s\n","# vtk DataFile Version 3.0");
   fprintf(vtkout,"%s\n",fname);
@@ -254,7 +180,7 @@ int write_vtk_ASCII(char *fname){
 
 //Points section
   fprintf(vtkout,"%s%d%s\n","POINTS ",nvert," float");
-  for(int ivrt=0;ivrt<nvert;ivrt++) fprintf(vtkout,"%f %f %f\n",verts[ivrt].x,verts[ivrt].y,0.0);
+  for(int ivrt=0;ivrt<nvert;ivrt++) fprintf(vtkout,"%f %f %f\n",verts[ivrt].x,verts[ivrt].y,verts[ivrt].z);
   fprintf(vtkout,"\n"); //write blank line
 
 //Elements section

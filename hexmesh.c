@@ -231,9 +231,7 @@ int main(int argc, char *argv[]){
 //write_rea(reaname);
 
   sprintf(reaname,"hexmesh.vtk");
-  write_vtk_ASCII(reaname);
-  sprintf(reaname,"hexmesh_bin.vtk");
-  write_vtk_bin(reaname);
+  write_vtk(reaname);
     
 //  sprintf(reaname,"pts.dat");
 //  output_pts(points,npts,reaname);
