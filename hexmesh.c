@@ -67,11 +67,11 @@ int main(int argc, char *argv[]){
 //read the points from the input file
 //read_inp(inname);
   
-  int N_pin_rings = 3;
+  int N_pin_rings = 2;
   double pitch = 1.15676;
   double deltag=0.10*(pitch-1.);
   double delta=deltag*1.5;
-  int nx=2,ny=3,ng=3;
+  int nx=1,ny=2,ng=2;
 //double apoth =        ((double)N_pin_rings - 1.0)*pitch*cos(pio6)+0.5+0.12;
 //double gap = apoth - (((double)N_pin_rings - 1.0)*pitch*cos(pio6)+0.5);
   double apoth = 7.32432/2.0;
@@ -232,6 +232,8 @@ int main(int argc, char *argv[]){
 
   sprintf(reaname,"hexmesh.vtk");
   write_vtk_ASCII(reaname);
+  sprintf(reaname,"hexmesh_bin.vtk");
+  write_vtk_bin(reaname);
     
 //  sprintf(reaname,"pts.dat");
 //  output_pts(points,npts,reaname);
