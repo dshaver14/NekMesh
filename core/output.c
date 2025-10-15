@@ -167,6 +167,40 @@ int rotate_element(quad *elem){
 return 0;
 }
 //-------------------------------------------------------------------
+int write_vtk(char *fname){
+
+  FILE *vtkout;
+
+  vtkout = fopen(fname,"w");
+
+  fprintf(vtkout,"%s\n","# vtk DataFile Version 3.0");
+  fprintf(vtkout,"%s\n",fname);
+  fprintf(vtkout,"%s\n","ASCII");
+  fprintf(vtkout,"%s\n","DATASET UNSTRUCTURED_GRID");
+
+//Points section
+  fprintf(vtkout,"%s%d%s\n","POINTS ",nvert," float");
+  for(int ivrt=0;ivrt<nvert;ivrt++) fprintf(vtkout,"%f %f %f\n",verts[ivrt].x,verts[ivrt].y,verts[ivrt].z);
+  fprintf(vtkout,"\n"); //write blank line
+
+//Elements section
+  fprintf(vtkout,"%s %d %d\n","CELLS",nelem,nelem*5);
+  for(int iel=0;iel<nelem;iel++) fprintf(vtkout,"%d %d %d %d %d\n",4,
+    elems[iel].vid[0],
+    elems[iel].vid[1],
+    elems[iel].vid[2],
+    elems[iel].vid[3]);
+  fprintf(vtkout,"\n"); //write blank line
+
+//Element type section
+  fprintf(vtkout,"%s %d\n","CELL_TYPES",nelem);
+  for(int iel=0;iel<nelem;iel++) fprintf(vtkout,"%d\n",9);
+
+  fclose(vtkout);
+
+return 0;
+}
+//-------------------------------------------------------------------
 int reset(void){
   printf("\n\treseting mesh generator\n\n");
   nelem = 0;
