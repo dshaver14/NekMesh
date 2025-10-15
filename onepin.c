@@ -63,14 +63,10 @@ int main(int argc, char *argv[]){
 //read the points from the input file
 //read_inp(inname);
   
-  int N_pin_rings = 2;
-  double pitch = 1.15676;
-  double deltag=0.10*(pitch-1.);
-  double delta=deltag*1.5;
-  int nx=6,ny=4;
-//double apoth =        ((double)N_pin_rings - 1.0)*pitch*cos(pio6)+0.5+0.12;
-//double gap = apoth - (((double)N_pin_rings - 1.0)*pitch*cos(pio6)+0.5);
+  double pitch = 1.13;
   double apoth = pitch/2.0;
+  int nx=6,ny=4;
+  double delta=(apoth-0.5)/(2.*(double)ny);
   points=malloc(4*sizeof(point));
 
 
@@ -81,6 +77,12 @@ int main(int argc, char *argv[]){
   base[2].x=apoth/cos(pio6);
   base[2].y=0.0;
   base[3]=rotate_point(base[2],pio3,origin);
+
+//rotate to be consistent with other meshes
+  for(int i=0;i<4;i++){
+    translate=rotate_point(base[i],-pio6,origin);
+    base[i]=translate;
+  }
 
   set_E_bcs(&BC);
 
