@@ -67,15 +67,15 @@ int main(int argc, char *argv[]){
 //read the points from the input file
 //read_inp(inname);
   
-  int N_pin_rings = 2;
-  double pitch = 1.15676;
-  double deltag=0.10*(pitch-1.);
-  double delta=deltag*1.5;
-  int nx=1,ny=2,ng=2;
+  int N_pin_rings = 3;
+  double pitch = 3.863/3.7;
+  double deltag=0.08*(pitch-1.);
+  double delta=deltag*1.1;
+  int nx=6,ny=3,ng=4;
 //double apoth =        ((double)N_pin_rings - 1.0)*pitch*cos(pio6)+0.5+0.12;
-//double gap = apoth - (((double)N_pin_rings - 1.0)*pitch*cos(pio6)+0.5);
-  double apoth = 7.32432/2.0;
-  double gap = apoth - (((double)4 - 1.0)*pitch*cos(pio6)+0.5);
+  double apoth = (8.704/3.7);
+  double gap = apoth - (((double)N_pin_rings - 1.0)*pitch*cos(pio6)+0.5);
+//double gap = apoth - (((double)9 - 1.0)*pitch*cos(pio6)+0.5);
   double gap_min = ((double)ny*delta+(double)ng*deltag)*1.01;
   if(gap<gap_min) {
     printf("Warning: gap between pin and hexcan wall too small for requested BL spacing. %f < %f\n",gap,gap_min);
@@ -101,7 +101,7 @@ int main(int argc, char *argv[]){
     double theta = 2.*((double)iang)*pio3;
     for(int ipt=0;ipt<4;ipt++) type1[4+ipt+4*iang]=rotate_point(type1[4+ipt],theta,type1[0]);
   }
-  sprintf(inname,"type1.dat");
+  sprintf(inname,"type1");
   output_pts(type1,npts1,inname);
 
 //Layout the canonical type 2 subchannel (edge)
@@ -129,7 +129,7 @@ int main(int argc, char *argv[]){
   type2[11]=translate_point(type2[11],translate);
   type2[10]=midpoint(type2[11],type2[9]);
 
-  sprintf(inname,"type2.dat");
+  sprintf(inname,"type2");
   output_pts(type2,npts2,inname);
 
 //Layout the canonical type 3 subchannel (corner)
@@ -169,7 +169,7 @@ int main(int argc, char *argv[]){
     return 0;
   }
 
-  sprintf(inname,"type3.dat");
+  sprintf(inname,"type3");
   output_pts(type3,npts3,inname);
  
 //make the mesh 
@@ -225,17 +225,10 @@ int main(int argc, char *argv[]){
     }
   }
 
-//sprintf(reaname,"type3.dat");
-//output_pts(points,npts3,reaname);
+  write_rea(reaname);
 
-//write_rea(reaname);
-
-  sprintf(reaname,"hexmesh.vtk");
   write_vtk(reaname);
     
-//  sprintf(reaname,"pts.dat");
-//  output_pts(points,npts,reaname);
-  sprintf(reaname,"vts.dat");
   if(nvert>0) output_pts(verts,nvert,reaname);
   
 return 0;

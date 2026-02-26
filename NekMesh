@@ -11,8 +11,11 @@ if [ ! -e nekmesh ];then
 fi
 
 echo ""
-./nekmesh -fi $1.inp -rea $1.rea
+./nekmesh -fi $1.inp -rea $1
 echo ""
+
+exit
+
 echo "generating re2 file"
 reatore2 << EOF
 $1

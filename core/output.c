@@ -1,12 +1,17 @@
 int write_rea(char *fname){
 
-  char line[256],bcout[4];
+  char line[256],bcout[4],name[68];
+  const char ext[]=".rea";
 
   FILE *reain,*reaout;
 
   int i,j,k,ivert,inc=0;
   double dx;
   double xmin=1.0e30,xmax=-1.0e30,ymin=1.0e30,ymax=-1.0e30;
+
+  strncpy(name,fname,strnlen(fname,64)+1);
+  add_ext(name,ext);
+  add_ext(name,ext);
 
   if(nelem>=1000000){
     printf("Error: rea printout for 1e6 elements or more NOT supported!\n\tNo rea file produced\n");
@@ -30,9 +35,9 @@ int write_rea(char *fname){
 
   dx=fmax((xmax-xmin),(ymax-ymin));
 
-  reaout=fopen(fname,"w");
+  printf("\n\twriting %d elements to file \"%s\"\n\n",nelem,name);
 
-  printf("\n\twriting %d elements to file \"%s\"\n\n",nelem,fname);
+  reaout=fopen(name,"w");
 
   reain=fopen("core/reatop.txt","r");
   while(fgets(line,256,reain)!=NULL) fprintf(reaout,"%s",line);
@@ -171,7 +176,15 @@ int write_vtk(char *fname){
 
   FILE *vtkout;
 
-  vtkout = fopen(fname,"w");
+  char vtkname[68];
+  const char ext[]=".vtk";
+
+  strncpy(vtkname,fname,strnlen(fname,64)+1);
+  add_ext(vtkname,ext);
+
+  vtkout = fopen(vtkname,"w");
+
+  printf("\n\twriting %d elements to file \"%s\"\n\n",nelem,vtkname);
 
   fprintf(vtkout,"%s\n","# vtk DataFile Version 3.0");
   fprintf(vtkout,"%s\n",fname);
@@ -180,7 +193,8 @@ int write_vtk(char *fname){
 
 //Points section
   fprintf(vtkout,"%s%d%s\n","POINTS ",nvert," float");
-  for(int ivrt=0;ivrt<nvert;ivrt++) fprintf(vtkout,"%f %f %f\n",verts[ivrt].x,verts[ivrt].y,verts[ivrt].z);
+//for(int ivrt=0;ivrt<nvert;ivrt++) fprintf(vtkout,"%f %f %f\n",verts[ivrt].x,verts[ivrt].y,verts[ivrt].z);
+  for(int ivrt=0;ivrt<nvert;ivrt++) fprintf(vtkout,"%f %f %f\n",verts[ivrt].x,verts[ivrt].y,0.0);
   fprintf(vtkout,"\n"); //write blank line
 
 //Elements section
@@ -212,8 +226,12 @@ int output_pts(point *pts,int npts,char *fnm){
 
   int i;
   FILE *ptout;
+  char ptname[68];
 
-  ptout=fopen(fnm,"w");
+  strncpy(ptname,fnm,strnlen(fnm,64)+1);
+  add_ext(ptname,".pts");
+
+  ptout=fopen(ptname,"w");
   for(i=0;i<npts;i++) fprintf(ptout,"%13.7f %13.7f \"%d\"\n",(pts+i)->x,(pts+i)->y,i);
   fclose(ptout);
 
@@ -232,4 +250,11 @@ int gmsh_pts(point *pts,int npts,char *fnm){
   return i;
 }
 //-------------------------------------------------------------------
+void add_ext(char *fname,const char ext[4]){
 
+  int i=strnlen(fname,64);
+  if(strncmp(&fname[i-4],ext,4)!=0) strcat(fname,ext); 
+
+  return;
+}
+//-------------------------------------------------------------------
