@@ -65,7 +65,7 @@ int main(int argc, char *argv[]){
   
   double pitch = 1.13;
   double apoth = pitch/2.0;
-  int nx=6,ny=4;
+  int nx=18,ny=4;
   double delta=(apoth-0.5)/(2.*(double)ny);
   points=malloc(4*sizeof(point));
 
