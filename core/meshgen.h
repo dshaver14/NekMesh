@@ -1,4 +1,4 @@
-#define max_elem 25000
+#define max_elem 250000
 #define max_block 25
 
 typedef struct { double x; double y; double z;} point;
@@ -64,6 +64,7 @@ int axi_consistency_check(quad*);
 int rotate_element(quad*);
 int reset(void);
 int output_pts(point*,int,char*);
+void add_ext(char*,const char[4]);
 
 int read_inp(char*);
 int read_vars(FILE*,var**,int*);
